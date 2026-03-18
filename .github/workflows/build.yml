@@ -28,7 +28,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       
+      - name: Fix Gradle JVM args (remove deprecated MaxPermSize)
+        run: |
+          # Remove deprecated MaxPermSize from gradle.properties if present
+          if [ -f gradle.properties ]; then
+            sed -i 's/-XX:MaxPermSize=[0-9]*[mM]//g' gradle.properties
+            sed -i 's/MaxPermSize=[0-9]*[mM]//g' gradle.properties
+          fi
+      
       - name: Build Debug APK
+        env:
+          GRADLE_OPTS: "-XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC -Xms512M -Xmx4g"
         run: ./gradlew assembleDebug --no-daemon
       
       - name: Upload Debug APK
@@ -39,6 +49,8 @@ jobs:
           retention-days: 30
       
       - name: Build Release APK (unsigned)
+        env:
+          GRADLE_OPTS: "-XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC -Xms512M -Xmx4g"
         run: ./gradlew assembleRelease --no-daemon
       
       - name: Upload Release APK
@@ -49,6 +61,8 @@ jobs:
           retention-days: 30
       
       - name: Build Android App Bundle (AAB)
+        env:
+          GRADLE_OPTS: "-XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC -Xms512M -Xmx4g"
         run: ./gradlew bundleRelease --no-daemon
       
       - name: Upload AAB
